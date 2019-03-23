@@ -57,24 +57,25 @@ function setup() {
                 var currentState = getState()
                 if (lastState != null && lastState != currentState) {
                         console.log('state changed, its now ' + currentState)
-
-                        if (currentState == 1) {
-                                var message = new Message(JSON.stringify({
-                                        timestamp: new Date(),
-                                        water_on: currentState
-                                }))
-                                
-                                message.properties.add('hostname', hostname);
-                                
-                                client.sendEvent(message, function (err) {
-                                if (err) {
-                                        console.error('send error: ' + err.toString());
-                                } else {
-                                        console.log('message sent');
-                                }
-                                })
-                        }
                 }
+
+                if (currentState == 1) {
+                        var message = new Message(JSON.stringify({
+                                timestamp: new Date(),
+                                water_on: currentState
+                        }))
+                        
+                        message.properties.add('hostname', hostname);
+                        
+                        client.sendEvent(message, function (err) {
+                        if (err) {
+                                console.error('send error: ' + err.toString());
+                        } else {
+                                console.log('message sent');
+                        }
+                        })
+                }
+
                 ledOut.set(currentState)
                 lastState = currentState
         }, 500);

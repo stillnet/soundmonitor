@@ -1,6 +1,22 @@
 // nodejs
 
 var gpio = require("gpio");
+var fs = require("fs");
+var Mqtt = require('azure-iot-device-mqtt').Mqtt;
+var DeviceClient = require('azure-iot-device').Client
+var Message = require('azure-iot-device').Message;
+var os = require("os");
+var hostname = os.hostname();
+
+try {
+        var connectionString = fs.readFileSync('./connectionstring.txt', 'utf8').trim();
+}
+catch (e) {
+        console.log('Error: could not read connectionstring.txt. Create this file with your connection string in it')
+        process.exit()
+}
+
+var client = DeviceClient.fromConnectionString(connectionString, Mqtt);
 
 let OFF = 1
 let ON = 0
@@ -41,6 +57,23 @@ function setup() {
                 var currentState = getState()
                 if (lastState != null && lastState != currentState) {
                         console.log('state changed, its now ' + currentState)
+
+                        if (currentState == 1) {
+                                var message = new Message(JSON.stringify({
+                                        timestamp: new Date(),
+                                        water_on: currentState
+                                }))
+                                
+                                message.properties.add('hostname', hostname);
+                                
+                                client.sendEvent(message, function (err) {
+                                if (err) {
+                                        console.error('send error: ' + err.toString());
+                                } else {
+                                        console.log('message sent');
+                                }
+                                })
+                        }
                 }
                 ledOut.set(currentState)
                 lastState = currentState
@@ -56,6 +89,7 @@ function handleChange(val) {
 function getState() {
         return state
 }
+    
 
 process.on('SIGINT', () => {
           ledOut.set(0);
